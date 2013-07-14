@@ -1,0 +1,1548 @@
+-- $Gateweaver: robin.asn1,v 1.81 2007/05/29 17:29:51 cmaxwell Exp $
+
+--
+-- Changing the messaging API (ROBIN_*) has consequences!  Be very careful, and
+-- remember to update:
+-- 	->	ROBIN-MSGTYPE	application ID must match
+-- 	->	robin.h			callback definitions
+--	->	robin_print.c	common message printing
+
+ROBIN DEFINITIONS ::=
+BEGIN
+
+ROBIN-LOCKTYPE ::= BIT STRING {
+	lock_nl(0),			-- Notify (NULL)
+	lock_cr(1),			-- Concurrent Read
+	lock_cw(2),			-- Concurrent Write
+	lock_pr(3),			-- Protected Read
+	lock_pw(4),			-- Protected Write
+	lock_ex(5),			-- Exclusive
+	lock_lease(6),		-- timed lease
+	lock_whole(7),		-- whole node lock
+	lock_range(8),		-- range lock
+	lock_avail(9),		-- only lock if immediately available
+	lock_break(10)		-- break the listed lock types
+}
+
+ROBIN-MSGTYPE ::= INTEGER {
+	-- MESSAGING
+	ROBIN_MSG_GETROOT(1),
+	ROBIN_MSG_GETROUTE(2),
+	ROBIN_MSG_GETDISK(3),
+	ROBIN_MSG_GETCLIENT(4),
+	ROBIN_MSG_GETOID(5),
+	ROBIN_MSG_SETOID(6),
+	ROBIN_MSG_GETLOCK(7),
+	ROBIN_MSG_GETACTION(8),
+	ROBIN_MSG_GETTRANS(9),
+
+	-- CONNECTION
+	ROBIN_MSG_PING(10),
+	ROBIN_MSG_PONG(11),
+	ROBIN_MSG_SETCLIENTID(12),
+	ROBIN_MSG_SETCON(13),
+	ROBIN_MSG_DISCONNECT(14),
+	ROBIN_MSG_REFRESH(15),
+
+	-- REPLIES
+	ROBIN_MSG_STATUS(20),
+	ROBIN_MSG_STATUSHDL(21),
+	ROBIN_MSG_STATUSHDLSUM(22),
+	ROBIN_MSG_STATUSROUTE(23),
+	ROBIN_MSG_STATUSLOCK(24),
+	ROBIN_MSG_STATUSINFO(25),
+	ROBIN_MSG_STATUSACL(26),
+	ROBIN_MSG_STATUSDATA(27),
+	ROBIN_MSG_STATUSDIRENT(28),
+	ROBIN_MSG_STATUSTOKEN(29),
+	ROBIN_MSG_STATUSDISK(30),
+	ROBIN_MSG_STATUSHOST(31),
+	ROBIN_MSG_STATUSGROUP(32),
+	ROBIN_MSG_STATUSOID(33),
+	ROBIN_MSG_STATUSPROTECT(34),
+	ROBIN_MSG_STATUSSYNC(35),
+
+	-- NODE
+	ROBIN_MSG_MKNODE(40),
+	ROBIN_MSG_MKSYM(41),
+	ROBIN_MSG_OPEN(42),
+	ROBIN_MSG_UNLOCK(43),
+	ROBIN_MSG_GETATTR(44),
+	ROBIN_MSG_PUTATTR(45),
+	ROBIN_MSG_GETACL(46),
+	ROBIN_MSG_PUTACL(47),
+
+	-- NODE DATA
+	ROBIN_MSG_READ(50),
+	ROBIN_MSG_WRITE(51),
+	ROBIN_MSG_APPEND(52),
+	ROBIN_MSG_TRANS_START(53),
+	ROBIN_MSG_TRANS_WRITE(54),
+	ROBIN_MSG_TRANS_APPEND(55),
+	ROBIN_MSG_TRANS_READ(56),
+	ROBIN_MSG_TRANS_FINISH(57),
+	ROBIN_MSG_TRANS_ABORT(58),
+	ROBIN_MSG_TRANS_SYNC(59),
+
+	-- NODE MANIPULATION
+	ROBIN_MSG_NODE_PUT(60),
+	ROBIN_MSG_NODE_DEL(61),
+	ROBIN_MSG_NODE_COW(62),
+	ROBIN_MSG_NODE_SYNC(63),
+	ROBIN_MSG_NODE_XFER(64),
+	ROBIN_MSG_NODE_SNAP(65),
+	ROBIN_MSG_NODE_GETSUM(66),
+
+	-- NAMESPACE
+	ROBIN_MSG_LOOKUP(70),
+	ROBIN_MSG_READDIR(71),
+	ROBIN_MSG_DIRLINK(72),
+	ROBIN_MSG_DIRUNLINK(73),
+	ROBIN_MSG_DIRRELINK(74),
+	ROBIN_MSG_DIRCREATE(75),
+	ROBIN_MSG_DIRSYMLINK(76),
+	ROBIN_MSG_DIRRENAME(77),
+	ROBIN_MSG_DIRHISTGET(78),
+	ROBIN_MSG_DIRHISTSET(79),
+
+	-- GROUP
+	ROBIN_MSG_GROUP_CREATE(80),
+	ROBIN_MSG_GROUP_DELETE(81),
+	ROBIN_MSG_GROUP_MODIFY(82),
+	ROBIN_MSG_GROUP_RENAME(83),
+	ROBIN_MSG_GROUP_ADD(84),
+	ROBIN_MSG_GROUP_DEL(85),
+	ROBIN_MSG_GROUP_GET(86),
+	ROBIN_MSG_GROUP_PUT(87),
+	ROBIN_MSG_GROUP_EVAL(88),
+
+	-- IHAVE
+	ROBIN_MSG_IHAVE_PART(90),
+	ROBIN_MSG_IHAVE_VOLUME(91),
+	ROBIN_MSG_IHAVE_NODE(92),
+	ROBIN_MSG_IHAVE_ROUTE(93),
+	ROBIN_MSG_IHAVE_FINISHED(94),
+	ROBIN_MSG_IHAVE_GROUP(95),
+	ROBIN_MSG_IHAVE_TRANS(96),
+	ROBIN_MSG_IHAVE_WITHDRAW(97),
+	ROBIN_MSG_IHAVE_PROTECT(98),
+
+	-- VOLUME
+	ROBIN_MSG_VOLUME_GETROOT(100),
+	ROBIN_MSG_VOLUME_SETROOT(101),
+	ROBIN_MSG_VOLUME_CREATE(102),
+	ROBIN_MSG_VOLUME_MKNODE(103),
+	ROBIN_MSG_VOLUME_CHNODE(104),
+	ROBIN_MSG_VOLUME_STNODE(105),
+	ROBIN_MSG_VOLUME_RMNODE(106),
+	ROBIN_MSG_VOLUME_SNAPSHOT(107),
+	ROBIN_MSG_VOLUME_DIRLINK(108),
+	ROBIN_MSG_VOLUME_DIRUNLINK(109),
+	ROBIN_MSG_VOLUME_VRNODE(110),
+	ROBIN_MSG_VOLUME_VRSIZE(111),
+	ROBIN_MSG_VOLUME_RACL(112),
+	ROBIN_MSG_VOLUME_WACL(113),
+
+	-- TOKEN
+	ROBIN_MSG_TOKEN_VERIFY(120),
+	ROBIN_MSG_TOKEN_PUT(121),
+	ROBIN_MSG_TOKEN_GET(122),
+	ROBIN_MSG_TOKEN_DEL(123),
+
+	-- COMPOUND
+	ROBIN_MSG_COMPOUND(130),
+
+	-- DISK
+	ROBIN_MSG_DISK_INITIALIZE(140),
+	ROBIN_MSG_DISK_MODIFY(141),
+	ROBIN_MSG_DISK_RECOVER(142),
+	ROBIN_MSG_DISK_BALANCE(143),
+	ROBIN_MSG_DISK_POWERUP(144),
+	ROBIN_MSG_DISK_POWERDOWN(145),
+
+	-- PROTECT
+	ROBIN_MSG_PROTECT_GET(150),
+	ROBIN_MSG_PROTECT_ADD(151),
+	ROBIN_MSG_PROTECT_DEL(152)
+}
+
+ROBIN-CKSUMTYPE ::= INTEGER {
+	RCKSUMTYPE_NONE(0),
+	RCKSUMTYPE_MD5(1),
+	RCKSUMTYPE_SHA1(2),
+	RCKSUMTYPE_RMD160(3),
+	RCKSUMTYPE_SHA256(4),
+	RCKSUMTYPE_SHA384(5),
+	RCKSUMTYPE_SHA512(6),
+	RCKSUMTYPE_ROLL32(7),
+	RCKSUMTYPE_MD4(8)
+}
+
+TOKENTYPE ::= INTEGER {
+	TOKENTYPE_NONE(0),
+	TOKENTYPE_CONFIG(1),
+	TOKENTYPE_FAKE(2),
+	TOKENTYPE_AES128_CTS_HMAC_SHA1_96(3),
+	TOKENTYPE_AES256_CTS_HMAC_SHA1_96(4)
+}
+
+ROBIN-TYPE ::= INTEGER {
+	RTYPE_GENERIC(0),		-- unknown
+	RTYPE_REGULAR(1),		-- regular file
+	RTYPE_DIRECTORY(2),		-- directory
+	RTYPE_SYMLINK(3),		-- symbolic link
+	RTYPE_VOLUME(4),		-- volume
+	RTYPE_GRAFT(5),			-- graft with pointer
+	RTYPE_AUTHORITY(6),		-- authority record
+	RTYPE_VERSION(7)		-- version (not yet implemented)
+}
+
+ROBIN-ROUTETYPE ::= INTEGER {
+	RROUTE_DEAD(0),			-- dead route, no info
+	RROUTE_PEER(1),			-- passed on from peer
+	RROUTE_WREN(2),			-- local disk server
+	RROUTE_IOWN(3),			-- authority record
+	RROUTE_FILTER(4)		-- filter
+}
+
+ROBIN-RIGHT ::= BIT STRING {
+	read(0),		-- FILE: read
+	write(1),		-- FILE: write
+	append(2),		-- FILE: append
+	delete(3),		-- FILE: delete
+	lookup(4),		-- DIR: lookup
+	insert(5),		-- DIR: insert
+	remove(6),		-- DIR: remove
+	rattr(7),		-- META: read attributes
+	wattr(8),		-- META: write attributes
+	execute(9),		-- META: executable flag
+	racl(10),		-- ACL: read ACL list
+	wacl(11),		-- ACL: write ACL list
+	admin(12),		-- ACL: admin, change owner, etc.
+	lock(13),		-- LOCK: lock
+	notify(14),		-- LOCK: change notification
+	pfile(15),		-- PROP: propagate to child files
+	pdir(16),		-- PROP: propagate to child directories
+	ponly(17),		-- PROP: apply only when propagating
+	pstop(18),		-- PROP: do not apply propagation
+	peruse(19),		-- DIR: peruse (readdir)
+	-- empty(20),
+	-- empty(21),
+	-- empty(22),
+	-- empty(23),
+	local1(24),		-- LOCAL: Available for private use by clients.  Never
+	local2(25),		--		  checked or used by NodeRouter or DiskServer.
+	local3(26),
+	local4(27),
+	local5(28),
+	local6(29),
+	local7(30),
+	local8(31)
+}
+
+ADDR-TYPE ::= INTEGER {
+	ROBIN_ADDRESS_NONE(0),				-- AF_UNSPEC
+	ROBIN_ADDRESS_LOCAL(1),				-- AF_LOCAL/AF_UNIX
+	ROBIN_ADDRESS_INET(2),				-- AF_INET
+	ROBIN_ADDRESS_INET6(24),			-- AF_INET6
+	ROBIN_ADDRESS_ADDRPORT(256),
+	ROBIN_ADDRESS_IPPORT(257),
+	ROBIN_ADDRESS_SELF(258)				-- loopback
+}
+
+-- this is sugar to make something ASN1 does not have: unsigned
+ROBIN-UNSIGNED ::= INTEGER (0..4294967295)
+
+RobinData ::= OCTET STRING
+RobinFilename ::= OCTET STRING
+RobinFilenames ::= SEQUENCE OF RobinFilename
+RobinHostname ::= GeneralString
+RobinHostnames ::= SEQUENCE OF RobinHostname
+
+RobinHandle ::= SEQUENCE {
+	vol[0]			ROBIN-UNSIGNED,		-- volume #
+	ino[1]			ROBIN-UNSIGNED,		-- inode #
+	gen[2]			ROBIN-UNSIGNED,		-- generation #
+	ver[3]			ROBIN-UNSIGNED		-- version #
+}
+RobinHandles ::= SEQUENCE OF RobinHandle
+
+RobinRoute ::= SEQUENCE {
+	hdl[0]		RobinHandle,
+	prefix[1]	INTEGER
+}
+RobinRoutes ::= SEQUENCE OF RobinRoute
+
+ROBIN-WEEKDAY ::= INTEGER {
+	ROBIN_WEEKDAY_MONDAY(1),
+	ROBIN_WEEKDAY_TUESDAY(2),
+	ROBIN_WEEKDAY_WEDNESDAY(3),
+	ROBIN_WEEKDAY_THURSDAY(4),
+	ROBIN_WEEKDAY_FRIDAY(5),
+	ROBIN_WEEKDAY_SATURDAY(6),
+	ROBIN_WEEKDAY_SUNDAY(7)
+}
+
+ROBIN-MONTH ::= INTEGER {
+	ROBIN_MONTH_JANUARY(1),
+	ROBIN_MONTH_FEBRUARY(2),
+	ROBIN_MONTH_MARCH(3),
+	ROBIN_MONTH_APRIL(4),
+	ROBIN_MONTH_MAY(5),
+	ROBIN_MONTH_JUNE(6),
+	ROBIN_MONTH_JULY(7),
+	ROBIN_MONTH_AUGUST(8),
+	ROBIN_MONTH_SEPTEMBER(9),
+	ROBIN_MONTH_OCTOBER(10),
+	ROBIN_MONTH_NOVEMBER(11),
+	ROBIN_MONTH_DECEMBER(12)
+}
+
+RobinDateSpec ::= SEQUENCE {
+	year[0]		INTEGER OPTIONAL,
+	month[1]	ROBIN-MONTH OPTIONAL,
+	weekday[2]	ROBIN-WEEKDAY OPTIONAL,
+	day[3]		INTEGER OPTIONAL,
+	hour[4]		INTEGER OPTIONAL,
+	minute[5]	INTEGER OPTIONAL,
+	second[6]	INTEGER OPTIONAL,
+	nanosec[7]	INTEGER OPTIONAL
+}
+
+RobinTime ::= SEQUENCE {
+	secs[0]			INTEGER64,			-- to infinity, and beyond
+	nsec[1]			INTEGER				-- nanoseconds
+}
+RobinTimes ::= SEQUENCE OF RobinTime
+
+RobinTimeDelta ::= SEQUENCE {
+	start[0]		RobinTime,
+	stop[1]			RobinTime
+}
+
+RobinHostAddress ::= SEQUENCE {
+	addr-type[0]	ADDR-TYPE,
+	port[1]			INTEGER,			-- port to connect to
+	address[2]		OCTET STRING
+}
+RobinHostAddresses ::= SEQUENCE OF RobinHostAddress
+
+RobinHost ::= SEQUENCE {
+	hostname[0]		RobinHostname,
+	addresses[1]	RobinHostAddresses
+}
+RobinHosts ::= SEQUENCE OF RobinHost
+
+RobinCell ::= SEQUENCE {
+	cellname[0]		RobinHostname,
+	hosts[1]		RobinHosts,			-- list of node routers
+	wrens[2]		RobinHosts			-- list of disk servers
+}
+RobinCells ::= SEQUENCE OF RobinCell
+
+RobinPrincipal ::= SEQUENCE {
+	name[0]			GeneralString,
+	cell[1]			GeneralString
+}
+RobinPrincipals ::= SEQUENCE OF RobinPrincipal
+
+RobinPartition ::= OCTET STRING			-- Host Unique IDentifier
+RobinPartitions ::= SEQUENCE OF RobinPartition
+
+RobinDisk ::= SEQUENCE {
+	hostname[0]		RobinHostname,
+	pid[1]			RobinPartition
+}
+RobinDisks ::= SEQUENCE OF RobinDisk
+
+RobinDiskFlags ::= BIT STRING {
+	available(0),	-- disk is initialized and available
+	up(1),			-- mark the disk up
+	down(2),		-- mark the disk down
+	drain(3),		-- mark the disk for draining
+	readonly(4),	-- set readonly
+	fickle(5),		-- set volatile flag
+	compact(6),		-- compact disk during recovery
+	verify(7),		-- disk requires verification
+	repair(8),		-- repair in progress
+	failure(9),		-- hard failure detected
+	powersave(10),	-- disk wants POWERUP/POWERDOWN notification
+	--
+	-- empty(11-23)
+	--
+	local1(24),		-- LOCAL: Available for private use by clients.  Never
+	local2(25),		--		  checked or used by NodeRouter or DiskServer.
+	local3(26),
+	local4(27),
+	local5(28),
+	local6(29),
+	local7(30),
+	local8(31)
+}
+
+RobinDiskTarget ::= SEQUENCE {
+	size[0]			INTEGER64 OPTIONAL,
+	percent[1]		INTEGER OPTIONAL
+}
+
+RobinDiskStats ::= SEQUENCE {
+	operations[0]	INTEGER64,
+	rbandwidth[1]	INTEGER64,
+	wbandwidth[2]	INTEGER64
+}
+
+RobinRights ::= SEQUENCE {
+	rights[0]		ROBIN-RIGHT,
+	principal[1]	RobinPrincipal
+}
+RobinRightsList ::= SEQUENCE OF RobinRights
+
+RobinAcl ::= SEQUENCE {
+	rights[0]		ROBIN-RIGHT,
+	nrights[1]		ROBIN-RIGHT,
+	arights[2]		ROBIN-RIGHT,
+	owner[3]		RobinPrincipal,
+	list[4]			RobinRightsList OPTIONAL
+}
+
+-- backlinks
+RobinParent ::= SEQUENCE {
+	phdl[0]			RobinHandle,
+	name[1]			RobinFilename
+}
+RobinFamily ::= SEQUENCE OF RobinParent
+
+-- Everything is optional
+RobinAttributes ::= SEQUENCE {
+	-- flags
+	type[0]			ROBIN-TYPE OPTIONAL,
+	acl[1]			RobinAcl OPTIONAL,
+	mtime[2]		RobinTime OPTIONAL,
+	atime[3]		RobinTime OPTIONAL,
+	ctime[4]		RobinTime OPTIONAL,
+	size[5]			INTEGER64 OPTIONAL,
+	family[6]		RobinFamily OPTIONAL
+}
+
+-- Directory entry, and a stacked directory entry
+RobinDirentry ::= SEQUENCE {
+	hdl[0]			RobinHandle,
+	type[1]			ROBIN-TYPE,
+	name[2]			RobinFilename
+}
+RobinDirentries ::= SEQUENCE OF RobinDirentry
+
+RobinChecksum ::= SEQUENCE {
+	cksumtype[0]	ROBIN-CKSUMTYPE,
+	checksum[1]		OCTET STRING
+}
+RobinChecksums ::= SEQUENCE OF RobinChecksum
+
+RobinSignature ::= SEQUENCE {
+	sigtype[0]		TOKENTYPE,		-- krb5 CKSUMTYPE
+	keytype[1]		INTEGER,		-- krb5 ENCTYPE
+	kvno[1]			INTEGER,
+	sigdata[2]		OCTET STRING
+}
+RobinSignatures ::= SEQUENCE OF RobinSignature
+
+-- from krb5 EncryptionKey
+RobinEncryptionKey ::= SEQUENCE {
+	keytype[0]		INTEGER,			-- KRB5 ENCTYPE
+	keyvalue[1]		OCTET STRING
+}
+RobinEncryptionKeys ::= SEQUENCE OF RobinEncryptionKey
+
+RobinTokenData ::= SEQUENCE {
+	hdl[0]			RobinHandle,			-- route the token covers
+	prefix[1]		INTEGER,				-- prefix (vol/ino/gen/ver)
+	issued[2]		RobinTime,				-- tie-breaker for conflicts
+	expire[3]		RobinTime OPTIONAL,		-- expiry, if requested
+	signator[4]		RobinPrincipal,			-- who signed, likely cell@REALM
+	principal[5]	RobinPrincipal,			-- authorized token holder
+	right[6]		ROBIN-RIGHT,			-- rights covered by token
+	private[7]		OCTET STRING OPTIONAL,	-- private extensions
+	partition[8]	RobinPartition OPTIONAL	-- better than using private
+}
+
+RobinToken ::= SEQUENCE {
+	data[0]			RobinTokenData,			-- signed data
+	sigs[1]			RobinSignatures			-- signatures
+}
+RobinTokens ::= SEQUENCE OF RobinToken
+
+RobinLock ::= SEQUENCE {
+	type[0]			ROBIN-LOCKTYPE,
+	expiry[1]		RobinTime OPTIONAL,	-- if leased, expiry time
+	lower[2]		INTEGER64 OPTIONAL,	-- range: lower limit
+	upper[3]		INTEGER64 OPTIONAL	-- range: upper limit
+}
+RobinLocks ::= SEQUENCE OF RobinLock
+
+RobinRouterFlags ::= BIT STRING {
+	inprogress(1),		-- operation in progress
+	placeholder(2),		-- disk not yet aware of route
+	valid(3),			-- route passed validity check
+	deleted(4),			-- node is marked deleted
+	readonly(5),		-- no modification may take place
+	fickle(6),			-- no assumptions may be made about this node
+	master(7),			-- primary copy
+	wipeme(8),			-- waiting to be destroyed
+	offline(9),			-- route history exists, but node offline
+	harderror(10),		-- invalid and unrecoverable
+	softerror(11)		-- invalid but may be recoverable
+}
+
+RobinQuota ::= SEQUENCE {
+	space[0]		INTEGER64,
+	nodes[1]		INTEGER64
+}
+
+RobinProtectTime ::= SEQUENCE {
+	start[0]		RobinDateSpec,
+	stop[1]			RobinDateSpec
+}
+RobinProtectTimes ::= SEQUENCE OF RobinProtectTime
+
+RobinProtectInfo ::= SEQUENCE {
+	need[0]			INTEGER OPTIONAL,
+	want[1]			INTEGER OPTIONAL,
+	limit[2]		INTEGER OPTIONAL,
+	time[3]			RobinProtectTimes
+}
+
+RobinProtectRule ::= SEQUENCE {
+	host[0]			RobinHostname,
+	total[1]		RobinProtectInfo,
+	local[2]		RobinProtectInfo,
+	remote[3]		RobinProtectInfo
+}
+RobinProtectRules ::= SEQUENCE OF RobinProtectRule
+
+RobinProtect ::= SEQUENCE {
+	total[0]		RobinProtectInfo,
+	local[1]		RobinProtectInfo,
+	remote[2]		RobinProtectInfo,
+	rules[3]		RobinProtectRules
+}
+
+RobinProtectSource ::= SEQUENCE {
+	vhdl[0]			RobinHandle OPTIONAL,
+	disk[1]			RobinDisk OPTIONAL
+}
+
+RobinProtectNode ::= SEQUENCE {
+	source[0]		RobinProtectSource,
+	route[1]		RobinRoute,
+	type[2]			ROBIN-TYPE OPTIONAL,
+	protect[3]		RobinProtect
+}
+RobinProtectNodes ::= SEQUENCE OF RobinProtectNode
+
+RobinGroupFlags ::= BIT STRING {
+	external(0),	-- external data source
+	readonly(1),	-- cannot modify this source
+	donthave(2)		-- no group db on this partition
+}
+
+RobinGroupRight ::= BIT STRING {
+	display(0),		-- display group entry
+	ownership(1),	-- show groups owned by this group
+	membership(2),	-- show members of this group
+	insert(3),		-- insert user in group
+	delete(4)		-- delete user from group
+}
+
+RobinGroup ::= SEQUENCE {
+	group[0]		RobinPrincipal,
+	owner[1]		RobinPrincipal,
+	public[2]		RobinGroupRight,
+	private[3]		RobinGroupRight
+}
+RobinGroups ::= SEQUENCE OF RobinGroup
+
+RobinGraftFlags ::= BIT STRING {
+	readonly(0),	-- Select the highest snapshot version
+	readwrite(1)
+}
+
+RobinGraft ::= SEQUENCE {
+	hdl[0]			RobinHandle,
+	type[1]			ROBIN-TYPE,
+	flags[2]		RobinGraftFlags,
+	cell[3]			RobinCell OPTIONAL
+}
+
+RobinTransFlags ::= BIT STRING {
+	resize(0),		-- change size upon completion
+	append(1),		-- transaction has unknown size
+	readonly(2),	-- no change to on-disk expected
+	abort(3)		-- do not complete transaction
+}
+
+RobinConFlags ::= BIT STRING {
+	nosign(0),		-- disable signatures
+	noencrypt(1),	-- disable encryption
+	compress(2),	-- enable compression
+	shutdown(3),	-- terminate connection
+	graceful(4)		-- terminate when able
+}
+
+RobinServerPref ::= SEQUENCE {
+	host[0]			RobinHost,
+	rank[1]			INTEGER
+}
+RobinServerPrefs ::= SEQUENCE OF RobinServerPref
+
+RobinNodeFlags ::= BIT STRING {
+	lock_attr(0),	-- lock attributes
+	force(1),		-- force action
+	wipe(2)			-- wipe node on unlink
+}
+
+ROBIN-SYNCTYPE ::= INTEGER {
+	RSYNC_GETSUMS(0),
+	RSYNC_ADD(1),
+	RSYNC_COPY(2),
+	RSYNC_RUN(3)
+}
+
+RobinSyncFlags ::= BIT STRING {
+	additional(0)					-- additional commands are pending
+}
+
+RobinSyncChecksum ::= SEQUENCE {
+	offset[0]		INTEGER64,		-- offset where (sums) begins
+	length[1]		INTEGER64,		-- length of total data summed
+	blksiz[2]		INTEGER64,		-- block size of each component checksum
+	weaksums[3]		RobinChecksums,
+	hardsums[4]		RobinChecksums
+}
+
+--
+-- GETSUMS: offset, length, other(blksiz)
+-- ADD:	offset, data
+-- COPY: offset, length, other(dstoff)
+-- RUN: offset, length, data
+--
+RobinSyncCommand ::= SEQUENCE {
+	command[0]		ROBIN-SYNCTYPE,
+	offset[1]		INTEGER64,
+	length[2]		INTEGER64,
+	other[3]		INTEGER64,
+	data[4]			RobinData
+}
+RobinSyncCommands ::= SEQUENCE OF RobinSyncCommand
+
+-- protocol header
+RobinHeader ::= SEQUENCE {
+	pvno[0]			INTEGER,		-- protocol version
+	xid[1]			ROBIN-UNSIGNED,	-- transaction ID
+	user[2]			RobinPrincipal OPTIONAL	-- user to execute command as
+}
+
+RobinStatus ::= SEQUENCE {
+	hdr[0]			RobinHeader,
+	status[1]		INTEGER,		-- defined in robin_err.et
+	rxid[2]			ROBIN-UNSIGNED	-- xid of original request
+}
+
+--
+-- WIRE PROTOCOL
+--
+
+-- MESSAGING OPERATIONS
+
+ROBIN-GETROOT ::= [APPLICATION 1] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags
+}
+
+ROBIN-GETROUTE ::= [APPLICATION 2] SEQUENCE {
+	hdr[0]			RobinHeader,
+	hdl[1]			RobinHandle,
+	prefix[2]		INTEGER,
+	limit[3]		INTEGER		-- longest prefix allowed
+}
+
+ROBIN-GETDISK ::= [APPLICATION 3] SEQUENCE {
+	hdr[0]			RobinHeader,
+	disks[1]		RobinDisks OPTIONAL
+}
+
+ROBIN-GETCLIENT ::= [APPLICATION 4] SEQUENCE {
+	hdr[0]			RobinHeader,
+	disks[1]		RobinDisks OPTIONAL,
+	principals[2]	RobinPrincipals OPTIONAL
+}
+
+ROBIN-GETOID ::= [APPLICATION 5] SEQUENCE {
+	hdr[0]			RobinHeader,
+	oid[1]			OBJECT IDENTIFIER
+}
+
+ROBIN-SETOID ::= [APPLICATION 6] SEQUENCE {
+	hdr[0]			RobinHeader,
+	oid[1]			OBJECT IDENTIFIER,
+	...									-- XXX define this later
+}
+
+ROBIN-GETLOCK ::= [APPLICATION 7] SEQUENCE {
+	hdr[0]			RobinHeader,
+	hdl[1]			RobinHandle,
+	prefix[2]		INTEGER,
+	principal[3]	RobinPrincipal OPTIONAL
+}
+
+ROBIN-GETACTION ::= [APPLICATION 8] SEQUENCE {
+	hdr[0]			RobinHeader,
+	hdl[1]			RobinHandle,
+	prefix[2]		INTEGER,
+	principal[3]	RobinPrincipal OPTIONAL
+}
+
+ROBIN-GETTRANS ::= [APPLICATION 9] SEQUENCE {
+	hdr[0]			RobinHeader,
+	hdl[1]			RobinHandle,
+	prefix[2]		INTEGER,
+	principal[3]	RobinPrincipal OPTIONAL,
+	disk[4]			RobinDisk OPTIONAL
+}
+
+-- CONNECTION OPERATIONS
+
+ROBIN-PING ::= [APPLICATION 10] SEQUENCE {
+	hdr[0]			RobinHeader
+}
+
+ROBIN-PONG ::= [APPLICATION 11] SEQUENCE {
+	rep[0]			RobinStatus
+}
+
+ROBIN-SETCLIENTID ::= [APPLICATION 12] SEQUENCE {
+	hdr[0]			RobinHeader,
+	clientid[1]		OCTET STRING,		-- requested session identifier
+	identity[2]		OCTET STRING,		-- persistent host identifier
+	verifier[3]		RobinEncryptionKey	-- private verifier
+}
+
+ROBIN-SETCON ::= [APPLICATION 13] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinConFlags,
+	addr[2]			RobinHostAddress OPTIONAL,	-- real client address
+	prefs[3]		RobinServerPrefs OPTIONAL	-- list of preferred servers
+}
+
+ROBIN-DISCONNECT ::= [APPLICATION 14] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinConFlags,
+	time[2]			RobinTime
+}
+
+ROBIN-REFRESH ::= [APPLICATION 15] SEQUENCE {
+	hdr[0]			RobinHeader,
+	hdl[1]			RobinHandle OPTIONAL
+}
+
+--
+-- the union ROBIN_STATUS_STORAGE in robin.h must be updated with new status
+-- message types.
+--
+
+ROBIN-STATUS ::= [APPLICATION 20] SEQUENCE {
+	rep[0]			RobinStatus
+}
+
+ROBIN-STATUSHDL ::= [APPLICATION 21] SEQUENCE {
+	rep[0]			RobinStatus,
+	hdl[1]			RobinHandle,
+	lock[2]			RobinLock OPTIONAL
+}
+
+ROBIN-STATUSHDLSUM ::= [APPLICATION 22] SEQUENCE {
+	rep[0]			RobinStatus,
+	hdl[1]			RobinHandle,
+	sum[2]			RobinChecksum,
+	lock[3]			RobinLock OPTIONAL
+}
+
+ROBIN-STATUSROUTE ::= [APPLICATION 23] SEQUENCE {
+	rep[0]			RobinStatus,
+	hdl[1]			RobinHandle,
+	prefix[2]		INTEGER,
+	rtype[3]		ROBIN-ROUTETYPE,			-- IOWN/PEER/WREN
+	ntype[4]		ROBIN-TYPE,					-- node type
+	flags[5]		RobinRouterFlags,
+	ttl[6]			INTEGER,
+	sum[7]			RobinChecksum OPTIONAL,
+	disk[8]			RobinDisk OPTIONAL,			-- node disk source
+	size[9]			INTEGER64,					-- on-disk size
+	atime[10]		RobinTime OPTIONAL			-- last access time
+}
+
+ROBIN-STATUSLOCK ::= [APPLICATION 24] SEQUENCE {
+	rep[0]			RobinStatus,
+	lock[1]			RobinLock OPTIONAL,
+	hosts[2]		RobinHosts OPTIONAL,
+	tokens[3]		RobinTokens OPTIONAL
+}
+
+ROBIN-STATUSINFO ::= [APPLICATION 25] SEQUENCE {
+	rep[0]			RobinStatus,
+	hdl[1]			RobinHandle,
+	vhdl[2]			RobinHandle OPTIONAL,
+	attr[3]			RobinAttributes,
+	sum[4]			RobinChecksum,
+	lock[5]			RobinLock OPTIONAL
+}
+
+ROBIN-STATUSACL ::= [APPLICATION 26] SEQUENCE {
+	rep[0]			RobinStatus,
+	acl[1]			RobinRightsList,
+	lock[2]			RobinLock OPTIONAL
+}
+
+ROBIN-STATUSDATA ::= [APPLICATION 27] SEQUENCE {
+	rep[0]			RobinStatus,
+	data[1]			OCTET STRING
+}
+
+-- rep.status should be ROBIN_ADDITIONAL if more entries are pending
+ROBIN-STATUSDIRENT ::= [APPLICATION 28] SEQUENCE {
+	rep[0]			RobinStatus,
+	entries[1]		RobinDirentries,
+	lock[2]			RobinLock OPTIONAL
+}
+
+ROBIN-STATUSTOKEN ::= [APPLICATION 29] SEQUENCE {
+	rep[0]			RobinStatus,
+	token[1]		RobinToken
+}
+
+ROBIN-STATUSDISK ::= [APPLICATION 30] SEQUENCE {
+	rep[0]			RobinStatus,
+	disk[1]			RobinDisk,
+	usedspace[2]	INTEGER64,
+	usednodes[3]	INTEGER64,
+	freespace[4]	INTEGER64,
+	freenodes[5]	INTEGER64,
+	rttlatency[6]	RobinTime,
+	rbandwidth[7]	INTEGER64,
+	wbandwidth[8]	INTEGER64,
+	flags[9]		RobinDiskFlags
+}
+
+ROBIN-STATUSHOST ::= [APPLICATION 31] SEQUENCE {
+	rep[0]			RobinStatus,
+	host[1]			RobinHost,
+	clientid[2]		OCTET STRING,
+	principals[3]	RobinPrincipals
+}
+
+ROBIN-STATUSGROUP ::= [APPLICATION 32] SEQUENCE {
+	rep[0]			RobinStatus,
+	group[1]		RobinPrincipal,
+	owner[2]		RobinPrincipal OPTIONAL,
+	public[3]		RobinGroupRight OPTIONAL,
+	private[4]		RobinGroupRight OPTIONAL,
+	users[5]		RobinPrincipals OPTIONAL
+}
+
+ROBIN-STATUSOID ::= [APPLICATION 33] SEQUENCE {
+	rep[0]			RobinStatus,
+	data[1]			OCTET STRING		-- XXX replace this
+}
+
+ROBIN-STATUSPROTECT ::= [APPLICATION 34] SEQUENCE {
+	rep[0]			RobinStatus,
+	rules[1]		RobinProtectNodes
+}
+
+ROBIN-STATUSSYNC ::= [APPLICATION 35] SEQUENCE {
+	rep[0]			RobinStatus,
+	syncsum[1]		RobinSyncChecksum OPTIONAL
+}
+
+-- NODE OPERATIONS
+
+ROBIN-MKNODE ::= [APPLICATION 40] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	vhdl[2]			RobinHandle OPTIONAL,	-- MUST provide one or both of vhdl
+	hdl[3]			RobinHandle OPTIONAL,	-- and hdl.
+	attr[4]			RobinAttributes,
+	sum[5]			RobinChecksum OPTIONAL,
+	lock[6]			ROBIN-LOCKTYPE OPTIONAL
+}
+
+ROBIN-MKSYM ::= [APPLICATION 41] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	vhdl[2]			RobinHandle OPTIONAL,
+	hdl[3]			RobinHandle,
+	attr[4]			RobinAttributes,
+	dest[5]			RobinFilename,
+	lock[6]			ROBIN-LOCKTYPE OPTIONAL
+}
+
+ROBIN-OPEN ::= [APPLICATION 42] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	vhdl[2]			RobinHandle OPTIONAL,
+	hdl[3]			RobinHandle,
+	lock[4]			ROBIN-LOCKTYPE OPTIONAL,
+	disk[5]			RobinDisk OPTIONAL
+}
+
+ROBIN-UNLOCK ::= [APPLICATION 43] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	vhdl[2]			RobinHandle OPTIONAL,
+	hdl[3]			RobinHandle,
+	lock[4]			ROBIN-LOCKTYPE OPTIONAL,	-- partial revoke of lock
+	expiry[5]		RobinTime OPTIONAL			-- grace time before expiry
+}
+
+ROBIN-GETATTR ::= [APPLICATION 44] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	vhdl[2]			RobinHandle OPTIONAL,
+	hdl[3]			RobinHandle
+}
+
+ROBIN-PUTATTR ::= [APPLICATION 45] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	vhdl[2]			RobinHandle OPTIONAL,
+	hdl[3]			RobinHandle,
+	attr[4]			RobinAttributes,
+	sum[5]			RobinChecksum OPTIONAL
+}
+
+ROBIN-GETACL ::= [APPLICATION 46] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	vhdl[2]			RobinHandle OPTIONAL,
+	hdl[3]			RobinHandle,
+	principal[4]	RobinPrincipal OPTIONAL
+}
+
+ROBIN-PUTACL ::= [APPLICATION 47] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	vhdl[2]			RobinHandle OPTIONAL,
+	hdl[3]			RobinHandle,
+	append[4]		RobinRightsList OPTIONAL,
+	change[5]		RobinRightsList OPTIONAL,
+	delete[6]		RobinRightsList OPTIONAL
+}
+
+-- NODE DATA OPERATIONS
+
+ROBIN-READ ::= [APPLICATION 50] SEQUENCE {
+	hdr[0]			RobinHeader,
+	hdl[1]			RobinHandle,
+	offset[2]		INTEGER64,
+	length[3]		INTEGER64,
+	token[4]		RobinToken OPTIONAL
+}
+
+ROBIN-WRITE ::= [APPLICATION 51] SEQUENCE {
+	hdr[0]			RobinHeader,
+	hdl[1]			RobinHandle,
+	offset[2]		INTEGER64,
+	length[3]		INTEGER64,
+	data[4]			OCTET STRING,
+	sum[5]			RobinChecksum OPTIONAL,
+	token[6]		RobinToken OPTIONAL
+}
+
+ROBIN-APPEND ::= [APPLICATION 52] SEQUENCE {
+	hdr[0]			RobinHeader,
+	hdl[1]			RobinHandle,
+	data[2]			OCTET STRING,
+	token[3]		RobinToken OPTIONAL
+}
+
+ROBIN-TRANS-START ::= [APPLICATION 53] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinTransFlags,
+	hdl[2]			RobinHandle,
+	offset[3]		INTEGER64,
+	length[4]		INTEGER64,
+	token[5]		RobinToken OPTIONAL
+}
+
+ROBIN-TRANS-WRITE ::= [APPLICATION 54] SEQUENCE {
+	hdr[0]			RobinHeader,
+	token[1]		RobinToken,
+	offset[2]		INTEGER64,
+	data[3]			OCTET STRING
+}
+
+ROBIN-TRANS-APPEND ::= [APPLICATION 55] SEQUENCE {
+	hdr[0]			RobinHeader,
+	token[1]		RobinToken,
+	data[2]			OCTET STRING
+}
+
+ROBIN-TRANS-READ ::= [APPLICATION 56] SEQUENCE {
+	hdr[0]			RobinHeader,
+	token[1]		RobinToken,
+	offset[2]		INTEGER64,
+	length[3]		INTEGER64
+}
+
+ROBIN-TRANS-FINISH ::= [APPLICATION 57] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinTransFlags,
+	token[2]		RobinToken,
+	sum[3]			RobinChecksum OPTIONAL
+}
+
+ROBIN-TRANS-ABORT ::= [APPLICATION 58] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinTransFlags,
+	token[2]		RobinToken,
+	txid[3]			OCTET STRING OPTIONAL
+}
+
+ROBIN-TRANS-SYNC ::= [APPLICATION 59] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinTransFlags,
+	token[2]		RobinToken,
+	sflags[3]		RobinSyncFlags,
+	hardsumtype[4]	ROBIN-CKSUMTYPE,
+	cmds[5]			RobinSyncCommands
+}
+
+-- NODE MANIPULATION
+
+ROBIN-NODE-PUT ::= [APPLICATION 60] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	hdl[2]			RobinHandle,
+	type[3]			ROBIN-TYPE,
+	size[4]			INTEGER64,
+	sum[5]			RobinChecksum OPTIONAL,
+	disk[6]			RobinDisk OPTIONAL,
+	token[7]		RobinToken OPTIONAL
+}
+
+ROBIN-NODE-DEL ::= [APPLICATION 61] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	hdl[2]			RobinHandle,
+	disk[3]			RobinDisk OPTIONAL,
+	token[4]		RobinToken OPTIONAL
+}
+
+ROBIN-NODE-COW ::= [APPLICATION 62] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	hdl[2]			RobinHandle,
+	nhdl[3]			RobinHandle,
+	disk[4]			RobinDisk OPTIONAL,
+	token[5]		RobinToken OPTIONAL
+}
+
+ROBIN-NODE-SYNC ::= [APPLICATION 63] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	hdl[2]			RobinHandle,
+	disk[3]			RobinDisk OPTIONAL,
+	token[4]		RobinToken OPTIONAL
+}
+
+ROBIN-NODE-XFER ::= [APPLICATION 64] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	hdl[2]			RobinHandle,
+	disk[3]			RobinDisk OPTIONAL,
+	token[4]		RobinToken OPTIONAL
+}
+
+ROBIN-NODE-SNAP ::= [APPLICATION 65] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	vhdl[2]			RobinHandle OPTIONAL,
+	hdl[3]			RobinHandle,
+	dhdl[4]			RobinHandle OPTIONAL,	-- destination handle
+	disk[5]			RobinDisk OPTIONAL,
+	token[6]		RobinToken OPTIONAL
+}
+
+ROBIN-NODE-GETSUM ::= [APPLICATION 66] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	hdl[2]			RobinHandle,
+	cksumtype[3]	ROBIN-CKSUMTYPE,
+	disk[4]			RobinDisk OPTIONAL,
+	token[5]		RobinToken OPTIONAL
+}
+
+-- NAMESPACE OPERATIONS
+
+ROBIN-LOOKUP ::= [APPLICATION 70] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	hdl[2]			RobinHandle,
+	name[3]			RobinFilename,
+	token[4]		RobinToken OPTIONAL
+}
+
+ROBIN-READDIR ::= [APPLICATION 71] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	hdl[2]			RobinHandle,
+	limit[3]		INTEGER OPTIONAL,-- limit number of responses
+	last[4]			RobinDirentry OPTIONAL,	-- last entry of previous reply
+	token[5]		RobinToken OPTIONAL
+}
+
+ROBIN-DIRLINK ::= [APPLICATION 72] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	vhdl[2]			RobinHandle OPTIONAL,
+	phdl[3]			RobinHandle,
+	hdl[4]			RobinHandle,
+	name[5]			RobinFilename,
+	type[6]			ROBIN-TYPE,
+	disk[7]			RobinDisk OPTIONAL,
+	token[8]		RobinToken OPTIONAL
+}
+
+ROBIN-DIRUNLINK ::= [APPLICATION 73] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	vhdl[2]			RobinHandle OPTIONAL,
+	phdl[3]			RobinHandle,
+	hdl[4]			RobinHandle,
+	name[5]			RobinFilename,
+	disk[6]			RobinDisk OPTIONAL,
+	token[7]		RobinToken OPTIONAL
+}
+
+ROBIN-DIRRELINK ::= [APPLICATION 74] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	vhdl[2]			RobinHandle OPTIONAL,
+	phdl[3]			RobinHandle,
+	hdl[4]			RobinHandle,
+	name[5]			RobinFilename,
+	type[6]			ROBIN-TYPE,
+	disk[7]			RobinDisk OPTIONAL,
+	token[8]		RobinToken OPTIONAL
+}
+
+ROBIN-DIRCREATE ::= [APPLICATION 75] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	vhdl[2]			RobinHandle OPTIONAL,
+	phdl[3]			RobinHandle,
+	hdl[4]			RobinHandle OPTIONAL,
+	name[5]			RobinFilename,
+	attr[6]			RobinAttributes,
+	sum[7]			RobinChecksum OPTIONAL,
+	lock[8]			ROBIN-LOCKTYPE OPTIONAL,
+	disk[9]			RobinDisk OPTIONAL,
+	token[10]		RobinToken OPTIONAL
+}
+
+ROBIN-DIRSYMLINK ::= [APPLICATION 76] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	vhdl[2]			RobinHandle OPTIONAL,
+	phdl[3]			RobinHandle,
+	hdl[4]			RobinHandle OPTIONAL,
+	name[5]			RobinFilename,
+	attr[6]			RobinAttributes,
+	dest[7]			RobinFilename,
+	lock[8]			ROBIN-LOCKTYPE OPTIONAL,
+	disk[9]			RobinDisk OPTIONAL,
+	token[10]		RobinToken OPTIONAL
+}
+
+ROBIN-DIRRENAME ::= [APPLICATION 77] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	vhdl[2]			RobinHandle OPTIONAL,
+	hdl[3]			RobinHandle,
+	oldphdl[4]		RobinHandle,
+	oldname[5]		RobinFilename,
+	newphdl[6]		RobinHandle,
+	newname[7]		RobinFilename,
+	type[8]			ROBIN-TYPE,
+	disk[9]			RobinDisk OPTIONAL,
+	token[10]		RobinToken OPTIONAL
+}
+
+ROBIN-DIRHISTGET ::= [APPLICATION 78] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	vhdl[2]			RobinHandle OPTIONAL,
+	phdl[3]			RobinHandle,
+	name[4]			RobinFilename,
+	last[5]			INTEGER,
+	limit[6]		INTEGER,
+	disk[7]			RobinDisk OPTIONAL,
+	token[8]		RobinToken OPTIONAL
+}
+
+ROBIN-DIRHISTSET ::= [APPLICATION 79] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	vhdl[2]			RobinHandle OPTIONAL,
+	phdl[3]			RobinHandle,
+	name[4]			RobinFilename OPTIONAL,
+	limit[5]		INTEGER,
+	disk[6]			RobinDisk OPTIONAL,
+	token[7]		RobinToken OPTIONAL
+}
+
+-- GROUP OPERATIONS
+
+ROBIN-GROUP-CREATE ::= [APPLICATION 80] SEQUENCE {
+	hdr[0]			RobinHeader,
+	group[1]		RobinPrincipal,
+	owner[2]		RobinPrincipal
+}
+
+ROBIN-GROUP-DELETE ::= [APPLICATION 81] SEQUENCE {
+	hdr[0]			RobinHeader,
+	group[1]		RobinPrincipal
+}
+
+ROBIN-GROUP-MODIFY ::= [APPLICATION 82] SEQUENCE {
+	hdr[0]			RobinHeader,
+	group[1]		RobinPrincipal,
+	owner[2]		RobinPrincipal OPTIONAL,
+	public[3]		RobinGroupRight OPTIONAL,
+	private[4]		RobinGroupRight OPTIONAL
+}
+
+ROBIN-GROUP-RENAME ::= [APPLICATION 83] SEQUENCE {
+	hdr[0]			RobinHeader,
+	old_group[1]	RobinPrincipal,
+	new_group[2]	RobinPrincipal
+}
+
+ROBIN-GROUP-ADD ::= [APPLICATION 84] SEQUENCE {
+	hdr[0]			RobinHeader,
+	group[1]		RobinPrincipal,
+	user[2]			RobinPrincipal
+}
+
+ROBIN-GROUP-DEL ::= [APPLICATION 85] SEQUENCE {
+	hdr[0]			RobinHeader,
+	group[1]		RobinPrincipal,
+	user[2]			RobinPrincipal
+}
+
+ROBIN-GROUP-GET ::= [APPLICATION 86] SEQUENCE {
+	hdr[0]			RobinHeader,
+	group[1]		RobinPrincipal
+}
+
+ROBIN-GROUP-PUT ::= [APPLICATION 87] SEQUENCE {
+	hdr[0]			RobinHeader,
+	group[1]		RobinPrincipal,
+	users[2]		RobinPrincipals
+}
+
+ROBIN-GROUP-EVAL ::= [APPLICATION 88] SEQUENCE {
+	hdr[0]			RobinHeader,
+	group[1]		RobinPrincipal,
+	user[2]			RobinPrincipal
+}
+
+-- IHAVE OPERATIONS
+
+ROBIN-IHAVE-PART ::= [APPLICATION 90] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinRouterFlags,
+	diskflags[2]	RobinDiskFlags,
+	partition[3]	RobinPartition,
+	partspace[4]	INTEGER64,					-- total physical space
+	usedspace[5]	INTEGER64,					-- allocated node space
+	freespace[6]	INTEGER64,					-- current free space
+	partnodes[7]	INTEGER64,					-- total physical nodes
+	usednodes[8]	INTEGER64,					-- allocated nodes
+	freenodes[9]	INTEGER64,					-- current free nodes
+	neednodes[10]	INTEGER64,					-- nodes needed for each hdl
+	maxblock[11]	INTEGER64,					-- maximum file size
+	lastmount[12]	RobinTime,					-- last mount time
+	totperf[13]		RobinDiskStats OPTIONAL,	-- total est performance
+	curperf[14]		RobinDiskStats OPTIONAL,	-- current utilization
+	tokenkey[15]	RobinEncryptionKey OPTIONAL	-- shared token signing key
+}
+
+ROBIN-IHAVE-VOLUME ::= [APPLICATION 91] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinRouterFlags,
+	vhdl[2]			RobinHandle,
+	attr[3]			RobinAttributes,
+	sum[4]			RobinChecksum OPTIONAL,
+	token[5]		RobinToken OPTIONAL,
+	selfname[6]		RobinFilename OPTIONAL,		-- volume internal name
+	roothdl[7]		RobinHandle,
+	atime[8]		RobinTime,
+	mtime[9]		RobinTime,
+	realsize[10]	INTEGER64 OPTIONAL
+}
+
+ROBIN-IHAVE-NODE ::= [APPLICATION 92] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinRouterFlags,
+	vhdl[2]			RobinHandle OPTIONAL,
+	hdl[3]			RobinHandle,
+	type[4]			ROBIN-TYPE,
+	size[5]			INTEGER64,
+	sum[6]			RobinChecksum,
+	token[7]		RobinToken OPTIONAL,
+	atime[8]		RobinTime,					-- last access time
+	mtime[9]		RobinTime,					-- last modification time
+	muser[10]		RobinPrincipal OPTIONAL,	-- last user to modify
+	realsize[11]	INTEGER64 OPTIONAL			-- physical on-disk size
+}
+
+ROBIN-IHAVE-ROUTE ::= [APPLICATION 93] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinRouterFlags,
+	hdl[2]			RobinHandle,
+	prefix[3]		INTEGER,
+	rtype[4]		INTEGER,
+	ttl[5]			INTEGER
+}
+
+ROBIN-IHAVE-FINISHED ::= [APPLICATION 94] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinRouterFlags
+}
+
+ROBIN-IHAVE-GROUP ::= [APPLICATION 95] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinGroupFlags
+}
+
+ROBIN-IHAVE-TRANS ::= [APPLICATION 96] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinTransFlags,
+	token[2]		RobinToken,
+	offset[3]		INTEGER64,
+	length[4]		INTEGER64,
+	append[5]		INTEGER64,
+	txid[6]			OCTET STRING
+}
+
+ROBIN-IHAVE-WITHDRAW ::= [APPLICATION 97] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinRouterFlags,
+	vhdl[2]			RobinHandle OPTIONAL,
+	hdl[3]			RobinHandle,
+	type[4]			ROBIN-TYPE,
+	errorcode[5]	INTEGER
+}
+
+ROBIN-IHAVE-PROTECT ::= [APPLICATION 98] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinRouterFlags,
+	rules[2]		RobinProtectNodes
+}
+
+-- VOLUME OPERATIONS
+
+ROBIN-VOLUME-GETROOT ::= [APPLICATION 100] SEQUENCE {
+	hdr[0]			RobinHeader,
+	flags[1]		RobinNodeFlags,
+	vhdl[2]			RobinHandle
+}
+
+ROBIN-VOLUME-SETROOT ::= [APPLICATION 101] SEQUENCE {
+	hdr[0]			RobinHeader,
+	vhdl[1]			RobinHandle,
+	hdl[2]			RobinHandle
+}
+
+ROBIN-VOLUME-CREATE ::= [APPLICATION 102] SEQUENCE {
+	hdr[0]			RobinHeader,
+	vhdl[1]			RobinHandle,
+	attr[2]			RobinAttributes,
+	quota[3]		RobinQuota,
+	name[4]			RobinFilename OPTIONAL,
+	token[5]		RobinToken OPTIONAL,
+	rules[6]		RobinProtectNodes OPTIONAL
+}
+
+ROBIN-VOLUME-MKNODE ::= [APPLICATION 103] SEQUENCE {
+	hdr[0]			RobinHeader,
+	vhdl[1]			RobinHandle,
+	hdl[2]			RobinHandle OPTIONAL,		-- no handle autogenerates
+	attr[3]			RobinAttributes,
+	sum[4]			RobinChecksum OPTIONAL
+}
+
+ROBIN-VOLUME-CHNODE ::= [APPLICATION 104] SEQUENCE {
+	hdr[0]			RobinHeader,
+	vhdl[1]			RobinHandle,
+	hdl[2]			RobinHandle,
+	attr[3]			RobinAttributes,
+	sum[4]			RobinChecksum OPTIONAL
+}
+
+ROBIN-VOLUME-STNODE ::= [APPLICATION 105] SEQUENCE {
+	hdr[0]			RobinHeader,
+	vhdl[1]			RobinHandle,
+	hdl[2]			RobinHandle
+}
+
+ROBIN-VOLUME-RMNODE ::= [APPLICATION 106] SEQUENCE {
+	hdr[0]			RobinHeader,
+	vhdl[1]			RobinHandle,
+	hdl[2]			RobinHandle
+}
+
+ROBIN-VOLUME-SNAPSHOT ::= [APPLICATION 107] SEQUENCE {
+	hdr[0]			RobinHeader,
+	vhdl[1]			RobinHandle,
+	dhdl[2]			RobinHandle OPTIONAL	-- destination handle
+}
+
+ROBIN-VOLUME-DIRLINK ::= [APPLICATION 108] SEQUENCE {
+	hdr[0]			RobinHeader,
+	vhdl[1]			RobinHandle,		-- volume handle
+	phdl[2]			RobinHandle,		-- parent handle
+	hdl[3]			RobinHandle,		-- child handle
+	name[4]			RobinFilename,
+	token[5]		RobinToken
+}
+
+ROBIN-VOLUME-DIRUNLINK ::= [APPLICATION 109] SEQUENCE {
+	hdr[0]			RobinHeader,
+	vhdl[1]			RobinHandle,		-- volume handle
+	phdl[2]			RobinHandle,		-- parent handle
+	hdl[3]			RobinHandle,		-- child handle
+	name[4]			RobinFilename,
+	token[5]		RobinToken
+}
+
+ROBIN-VOLUME-VRNODE ::= [APPLICATION 110] SEQUENCE {
+	hdr[0]			RobinHeader,
+	vhdl[1]			RobinHandle,
+	hdl[2]			RobinHandle,
+	token[3]		RobinToken OPTIONAL
+}
+
+ROBIN-VOLUME-VRSIZE ::= [APPLICATION 111] SEQUENCE {
+	hdr[0]			RobinHeader,
+	vhdl[1]			RobinHandle,
+	hdl[2]			RobinHandle,
+	size[3]			INTEGER64,
+	token[4]		RobinToken OPTIONAL
+}
+
+ROBIN-VOLUME-RACL ::= [APPLICATION 112] SEQUENCE {
+	hdr[0]			RobinHeader,
+	vhdl[1]			RobinHandle,
+	hdl[2]			RobinHandle,
+	principal[3]	RobinPrincipal OPTIONAL
+}
+
+ROBIN-VOLUME-WACL ::= [APPLICATION 113] SEQUENCE {
+	hdr[0]			RobinHeader,
+	vhdl[1]			RobinHandle,
+	hdl[2]			RobinHandle,
+	append[3]		RobinRightsList OPTIONAL,
+	change[4]		RobinRightsList OPTIONAL,
+	delete[5]		RobinRightsList OPTIONAL
+}
+
+-- TOKEN
+
+ROBIN-TOKEN-VERIFY ::= [APPLICATION 120] SEQUENCE {
+	hdr[0]			RobinHeader,
+	token[1]		RobinToken
+}
+
+ROBIN-TOKEN-PUT ::= [APPLICATION 121] SEQUENCE {
+	hdr[0]			RobinHeader,
+	token[1]		RobinToken,
+	disk[2]			RobinDisk OPTIONAL
+}
+
+ROBIN-TOKEN-GET ::= [APPLICATION 122] SEQUENCE {
+	hdr[0]			RobinHeader,
+	hdl[1]			RobinHandle,
+	disk[2]			RobinDisk OPTIONAL
+}
+
+ROBIN-TOKEN-DEL ::= [APPLICATION 123] SEQUENCE {
+	hdr[0]			RobinHeader,
+	hdl[1]			RobinHandle,
+	disk[2]			RobinDisk OPTIONAL
+}
+
+-- COMPOUND OPERATIONS
+
+ROBIN-COMPOUND ::= [APPLICATION 130] SEQUENCE {
+	hdr[0]			RobinHeader,
+	...
+}
+
+-- DISK OPERATIONS
+
+ROBIN-DISK-INITIALIZE ::= [APPLICATION 140] SEQUENCE {
+	hdr[0]			RobinHeader,
+	disk[1]			RobinDisk,
+	flags[2]		RobinDiskFlags
+}
+
+ROBIN-DISK-MODIFY ::= [APPLICATION 141] SEQUENCE {
+	hdr[0]			RobinHeader,
+	disk[1]			RobinDisk,
+	flags[2]		RobinDiskFlags OPTIONAL
+}
+
+ROBIN-DISK-RECOVER ::= [APPLICATION 142] SEQUENCE {
+	hdr[0]			RobinHeader,
+	disk[1]			RobinDisk,
+	flags[2]		RobinDiskFlags OPTIONAL
+}
+
+ROBIN-DISK-BALANCE ::= [APPLICATION 143] SEQUENCE {
+	hdr[0]			RobinHeader,
+	disk[1]			RobinDisk,
+	flags[2]		RobinDiskFlags OPTIONAL,
+	target[3]		RobinDiskTarget
+}
+
+ROBIN-DISK-POWERUP ::= [APPLICATION 144] SEQUENCE {
+	hdr[0]			RobinHeader,
+	disk[1]			RobinDisk,
+	flags[2]		RobinDiskFlags OPTIONAL
+}
+
+ROBIN-DISK-POWERDOWN ::= [APPLICATION 145] SEQUENCE {
+	hdr[0]			RobinHeader,
+	disk[1]			RobinDisk,
+	flags[2]		RobinDiskFlags OPTIONAL
+}
+
+-- PROTECT
+
+ROBIN-PROTECT-GET ::= [APPLICATION 150] SEQUENCE {
+	hdr[0]			RobinHeader,
+	source[1]		RobinProtectSource
+}
+
+ROBIN-PROTECT-ADD ::= [APPLICATION 151] SEQUENCE {
+	hdr[0]			RobinHeader,
+	rules[1]		RobinProtectNodes
+}
+
+ROBIN-PROTECT-DEL ::= [APPLICATION 152] SEQUENCE {
+	hdr[0]			RobinHeader,
+	rules[1]		RobinProtectNodes
+}
+
+END

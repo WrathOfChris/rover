@@ -1,0 +1,100 @@
+#
+# Error messages for the robin libarary
+#
+# use 'index #' to start at a specific code index
+# use 'prefix NAME' to re-prefix an error grouping
+
+id "$Gateweaver: robin_err.et,v 1.25 2007/05/18 21:44:10 cmaxwell Exp $"
+
+error_table rbn
+
+prefix ROBIN
+error_code NONE,			"no error"
+error_code UNIMPLEMENTED,	"feature is not (yet) implemented"
+error_code HOSTDOWN,		"host is down"
+error_code TIMEOUT,			"command timed out"
+error_code EXISTS,			"exists"
+error_code NOROUTE,			"no route"
+error_code NOTFOUND,		"not found"
+error_code NOTDIR,			"not a directory"
+error_code LOCKED,			"locked"
+error_code ADDITIONAL,		"additional entries are pending"
+error_code ENCODER,			"fatal error in protocol encoder"
+error_code PIGEON,			"pigeon action failed"
+error_code BADADDR,			"bad address"
+error_code SYSTEM,			"system error, see errno"
+error_code AUTH,			"authentication error"
+error_code NOHOSTS,			"no hosts are available"
+error_code DISCONNECTED,	"disconnected"
+error_code NOCONNECTION,	"no connection available"
+error_code MALICIOUS,		"malicious packet, dropping connection"
+error_code INPROGRESS,		"operation is already in progress"
+error_code RESOURCE,		"resource unavailable"
+error_code ILLEGAL,			"illegal operation attempted, go to jail!"
+error_code BADSIG,			"bad signature"
+error_code PERM,			"no permission"
+error_code NOTADMIN,		"administrative permission required"
+error_code NOTAUTH,			"not authoritative for this node"
+error_code TRANSIENT,		"resource disappeared"
+error_code UNSAFE,			"unsafe to complete operation at this time"
+
+prefix ROBIN_API
+error_code REQUIRED,		"an API requirement was not fulfulled"
+error_code INVALID,			"an invalid argument was supplied"
+error_code FAILURE,			"the requested action could not be performed"
+error_code NOMEM,			"no memory could be allocated, nor recovered"
+error_code BADSTATE,		"state machine in invalid state"
+error_code INTERNAL,		"internal error"
+error_code OVERFLOW,		"buffer overflow avoided"
+
+prefix ROBIN_DISK
+error_code OFFLINE,			"disk is offline"
+error_code TOOSMALL,		"disk is too small"
+error_code FAIL,			"disk failure"
+error_code SYSFAIL,			"disk system failure"
+error_code DATA,			"disk data failure"
+error_code META,			"disk meta failure"
+error_code LINK,			"disk link failure"
+error_code INDEX,			"disk index failure"
+error_code TRANS,			"disk transaction failure"
+error_code RANGE,			"disk operation out of range"
+error_code INODE,			"disk inode failure"
+
+prefix ROBIN_VOL
+error_code EXISTS,			"volume exists"
+error_code QUOTA,			"volume quota exceeded"
+error_code PERM,			"volume permission check failed"
+error_code NOTFOUND,		"volume does not exist"
+error_code SYSFAIL,			"volume operation failed badly"
+error_code NOROUTE,			"cannot find route to volume"
+error_code NOTOKEN,			"cannot generate token for volume"
+error_code NOTVALID,		"volume is not valid"
+error_code BADHANDLE,		"volume cannot recognize handle"
+
+prefix ROBIN_NODE
+error_code EXISTS,			"node exists"
+error_code BADSUM,			"node has bad checksum"
+error_code BADTYPE,			"node type cannot be created"
+error_code PERM,			"node permission check failed"
+error_code NOTFOUND,		"node cannot be found"
+error_code INVALID,			"node handle is invalid for this use"
+
+prefix ROBIN_DIR
+error_code EXISTS,			"directory entry already exists"
+error_code NOTFOUND,		"directory entry not found"
+error_code TOOLONG,			"directory entry name too long"
+error_code FAIL,			"directory entry link failure"
+error_code LOG,				"directory intention log failure"
+error_code UNLOG,			"directory intention unlog failure"
+error_code CHECKSUM,		"directory checksum mismatch"
+
+prefix ROBIN_CALLBACK
+error_code SAVEMSG,			"callback wants to preserve message"
+error_code RESEND,			"callback wants to resend message"
+error_code ADDITIONAL,		"callback wants to preserve state entry"
+
+index 128
+prefix
+error_code ROBIN_ERR_RCSID,	"$Gateweaver: robin_err.et,v 1.25 2007/05/18 21:44:10 cmaxwell Exp $"
+
+end
